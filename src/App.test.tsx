@@ -1,105 +1,104 @@
-import { screen, waitFor } from "@testing-library/react"
-import App from "./App"
-import { renderWithProviders } from "./utils/test-utils"
+import { screen, waitFor } from "@testing-library/react";
+import App from "./App";
+import { renderWithProviders } from "./utils/test-utils";
+import { foodItems } from "./utils/mock-data";
+import type { Order } from "./features/orders/orderSlice";
 
-test("App should have correct initial render", () => {
-  renderWithProviders(<App />)
+describe("App Component", () => {
+  it("should render main application sections", () => {
+    renderWithProviders(<App />);
 
-  // The app should be rendered correctly
-  expect(screen.getByText(/learn/i)).toBeInTheDocument()
+    // Check for main header
+    expect(screen.getByText("Order System")).toBeInTheDocument();
+    // Check for Order History button
+    expect(
+      screen.getByRole("button", { name: "Order history" }),
+    ).toBeInTheDocument();
+    // Check for Menu and Cart sections
+    expect(screen.getByRole("heading", { name: "Menu" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Cart" })).toBeInTheDocument();
+  });
 
-  // Initial state: count should be 0, incrementValue should be 2
-  expect(screen.getByLabelText("Count")).toHaveTextContent("0")
-  expect(screen.getByLabelText("Set increment amount")).toHaveValue(2)
-})
+  it("should open order history dialog when clicking the button", async () => {
+    const { user } = renderWithProviders(<App />);
 
-test("Increment value and Decrement value should work as expected", async () => {
-  const { user } = renderWithProviders(<App />)
+    // Order history dialog should be closed initially
+    expect(screen.queryByText("Order History")).not.toBeInTheDocument();
+    // Click on Order history button
+    await user.click(screen.getByRole("button", { name: "Order history" }));
+    // Dialog should be open with title
+    expect(screen.getByText("Order History")).toBeInTheDocument();
+    expect(screen.getByText("No order history")).toBeInTheDocument();
+  });
 
-  // Click on "+" => Count should be 1
-  await user.click(screen.getByLabelText("Increment value"))
-  expect(screen.getByLabelText("Count")).toHaveTextContent("1")
+  it("should show empty cart initially", () => {
+    renderWithProviders(<App />);
 
-  // Click on "-" => Count should be 0
-  await user.click(screen.getByLabelText("Decrement value"))
-  expect(screen.getByLabelText("Count")).toHaveTextContent("0")
-})
+    expect(screen.getByText("Your cart is empty")).toBeInTheDocument();
+  });
 
-test("Add Amount should work as expected", async () => {
-  const { user } = renderWithProviders(<App />)
+  it("should add items to cart from menu", async () => {
+    const { user } = renderWithProviders(<App />);
 
-  // "Add Amount" button is clicked => Count should be 2
-  await user.click(screen.getByText("Add Amount"))
-  expect(screen.getByLabelText("Count")).toHaveTextContent("2")
+    // Select a menu item and add it to cart
+    const menuItem = foodItems[0]; // Burger
+    await user.click(screen.getByText(menuItem.name));
+    // Check if item was added to cart
+    await waitFor(() => {
+      expect(
+        screen.getByText(`$${menuItem.price.toFixed(2)}`),
+      ).toBeInTheDocument();
+    });
+    // Cart should show the item
+    expect(screen.queryByText("Your cart is empty")).not.toBeInTheDocument();
+  });
 
-  const incrementValueInput = screen.getByLabelText("Set increment amount")
-  // incrementValue is 2, click on "Add Amount" => Count should be 4
-  await user.clear(incrementValueInput)
-  await user.type(incrementValueInput, "2")
-  await user.click(screen.getByText("Add Amount"))
-  expect(screen.getByLabelText("Count")).toHaveTextContent("4")
+  it("should handle order submission flow", async () => {
+    // Preload state with an item in cart
+    const preloadedState = {
+      cart: {
+        items: [{ item: foodItems[0], quantity: 1 }],
+      },
+      order: {
+        orders: [] as Order[],
+        status: "idle" as const,
+      },
+    };
 
-  // [Negative number] incrementValue is -1, click on "Add Amount" => Count should be 3
-  await user.clear(incrementValueInput)
-  await user.type(incrementValueInput, "-1")
-  await user.click(screen.getByText("Add Amount"))
-  expect(screen.getByLabelText("Count")).toHaveTextContent("3")
-})
+    const { user, store } = renderWithProviders(<App />, { preloadedState });
 
-it("Add Async should work as expected", async () => {
-  const { user } = renderWithProviders(<App />)
+    // Find and click Submit Order button
+    const submitButton = screen.getByRole("button", { name: "Submit Order" });
+    await user.click(submitButton);
 
-  // "Add Async" button is clicked => Count should be 2
-  await user.click(screen.getByText("Add Async"))
+    // Order should be processing
+    expect(store.getState().order.status).toBe("loading");
 
-  await waitFor(() =>
-    expect(screen.getByLabelText("Count")).toHaveTextContent("2"),
-  )
+    // After processing, cart should be empty and order should be added
+    await waitFor(() => {
+      expect(store.getState().order.status).toBe("idle");
+      expect(store.getState().cart.items).toHaveLength(0);
+      expect(store.getState().order.orders).toHaveLength(1);
+    });
+    // Cart should now show empty message
+    expect(screen.getByText("Your cart is empty")).toBeInTheDocument();
+  });
 
-  const incrementValueInput = screen.getByLabelText("Set increment amount")
-  // incrementValue is 2, click on "Add Async" => Count should be 4
-  await user.clear(incrementValueInput)
-  await user.type(incrementValueInput, "2")
+  it("should maintain theme consistency", () => {
+    renderWithProviders(<App />);
 
-  await user.click(screen.getByText("Add Async"))
-  await waitFor(() =>
-    expect(screen.getByLabelText("Count")).toHaveTextContent("4"),
-  )
+    // Theme elements should be consistent (check for primary green color buttons)
+    const submitOrderBtn = screen.queryByRole("button", {
+      name: "Submit Order",
+    });
+    // If the cart has items, the submit button would be visible
+    if (submitOrderBtn) {
+      expect(submitOrderBtn).toHaveClass("MuiButton-containedPrimary");
+    }
 
-  // [Negative number] incrementValue is -1, click on "Add Async" => Count should be 3
-  await user.clear(incrementValueInput)
-  await user.type(incrementValueInput, "-1")
-  await user.click(screen.getByText("Add Async"))
-  await waitFor(() =>
-    expect(screen.getByLabelText("Count")).toHaveTextContent("3"),
-  )
-})
-
-test("Add If Odd should work as expected", async () => {
-  const { user } = renderWithProviders(<App />)
-
-  // "Add If Odd" button is clicked => Count should stay 0
-  await user.click(screen.getByText("Add If Odd"))
-  expect(screen.getByLabelText("Count")).toHaveTextContent("0")
-
-  // Click on "+" => Count should be updated to 1
-  await user.click(screen.getByLabelText("Increment value"))
-  expect(screen.getByLabelText("Count")).toHaveTextContent("1")
-
-  // "Add If Odd" button is clicked => Count should be updated to 3
-  await user.click(screen.getByText("Add If Odd"))
-  expect(screen.getByLabelText("Count")).toHaveTextContent("3")
-
-  const incrementValueInput = screen.getByLabelText("Set increment amount")
-  // incrementValue is 1, click on "Add If Odd" => Count should be updated to 4
-  await user.clear(incrementValueInput)
-  await user.type(incrementValueInput, "1")
-  await user.click(screen.getByText("Add If Odd"))
-  expect(screen.getByLabelText("Count")).toHaveTextContent("4")
-
-  // click on "Add If Odd" => Count should stay 4
-  await user.clear(incrementValueInput)
-  await user.type(incrementValueInput, "-1")
-  await user.click(screen.getByText("Add If Odd"))
-  expect(screen.getByLabelText("Count")).toHaveTextContent("4")
-})
+    const orderHistoryBtn = screen.getByRole("button", {
+      name: "Order history",
+    });
+    expect(orderHistoryBtn).toHaveClass("MuiButton-outlined");
+  });
+});

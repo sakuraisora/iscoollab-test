@@ -11,7 +11,7 @@ describe("Orders Component", () => {
       date: "2023-01-01T12:00:00.000Z",
       items: [
         // 2 * 8.99 = 17.98
-        { item: foodItems[0], quantity: 2 }, 
+        { item: foodItems[0], quantity: 2 },
         // 1 * 12.99 = 12.99
         { item: foodItems[1], quantity: 1 },
       ],
@@ -22,7 +22,7 @@ describe("Orders Component", () => {
       date: "2023-01-02T12:00:00.000Z",
       items: [
         // 3 * 7.5 = 22.5
-        { item: foodItems[2], quantity: 3 }, 
+        { item: foodItems[2], quantity: 3 },
       ],
       total: 22.5,
     },
@@ -117,7 +117,7 @@ describe("Orders Component", () => {
     const preloadedState = {
       order: {
         // Use only the first order to simplify the test
-        orders: [mockOrders[0]] as Order[], 
+        orders: [mockOrders[0]] as Order[],
         status: "idle" as const,
       },
     };

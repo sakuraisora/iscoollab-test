@@ -89,15 +89,15 @@ describe("cart reducer", () => {
 
   it("should calculate correct cart total", () => {
     // Price: 8.99
-    const testItem1 = foodItems[0]; 
+    const testItem1 = foodItems[0];
     // Price: 12.99
-    const testItem2 = foodItems[1]; 
-    
+    const testItem2 = foodItems[1];
+
     store.dispatch(addToCart(testItem1));
     // 2 * 8.99 = 17.98
-    store.dispatch(updateQuantity({ id: testItem1.id, quantity: 2 })); 
+    store.dispatch(updateQuantity({ id: testItem1.id, quantity: 2 }));
     // 17.98 + 12.99 = 30.97
-    store.dispatch(addToCart(testItem2)); 
+    store.dispatch(addToCart(testItem2));
 
     expect(selectCartTotal(store.getState())).toBeCloseTo(30.97);
   });

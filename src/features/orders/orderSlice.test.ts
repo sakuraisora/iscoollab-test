@@ -24,18 +24,20 @@ describe("order reducer", () => {
   // Sample cart items for testing, Total: 30.97
   const cartItems = [
     // 2 * 8.99 = 17.98
-    { item: foodItems[0], quantity: 2 }, 
+    { item: foodItems[0], quantity: 2 },
     // 1 * 12.99 = 12.99
-    { item: foodItems[1], quantity: 1 }, 
+    { item: foodItems[1], quantity: 1 },
   ];
 
   // Setup and teardown for each test
   beforeEach(() => {
     // Mock Date.now
-    vitest.spyOn(Date, 'now').mockImplementation(() => mockDateNow);
+    vitest.spyOn(Date, "now").mockImplementation(() => mockDateNow);
     // Mock new Date().toISOString()
-    vitest.spyOn(Date.prototype, 'toISOString').mockImplementation(() => mockISOString);
-    
+    vitest
+      .spyOn(Date.prototype, "toISOString")
+      .mockImplementation(() => mockISOString);
+
     store = makeStore();
   });
 
@@ -107,9 +109,9 @@ describe("order reducer", () => {
 
   it("should calculate correct total spent", () => {
     // Total: 30.97 added to orders
-    store.dispatch(addOrder(cartItems)); 
+    store.dispatch(addOrder(cartItems));
     // 3 * 7.5 = 22.5
-    store.dispatch(addOrder([{ item: foodItems[2], quantity: 3 }])); 
+    store.dispatch(addOrder([{ item: foodItems[2], quantity: 3 }]));
     // Total should be 30.97 + 22.5 = 53.47
     expect(selectTotalSpent(store.getState())).toBeCloseTo(53.47);
   });

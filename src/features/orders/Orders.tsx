@@ -22,7 +22,6 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
  * - Option to clear order history
  */
 const Orders = () => {
-  // Redux hooks for dispatching actions and selecting state
   const dispatch = useAppDispatch();
   const orders = useAppSelector(selectOrders);
 

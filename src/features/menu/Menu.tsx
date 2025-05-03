@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { categories, foodItems } from "../../utils/mock-data";
 import type { Category, FoodItem } from "../../utils/mock-data";
 import { useAppDispatch } from "../../app/hooks";
@@ -21,7 +21,6 @@ import { ExpandLess, ExpandMore } from "@mui/icons-material";
  * - Add to cart functionality
  */
 const Menu = () => {
-  // Redux hooks for dispatching actions and selecting state
   const dispatch = useAppDispatch();
   /**
    * @description State for tracking which category is currently expanded
@@ -31,9 +30,11 @@ const Menu = () => {
   );
   /**
    * @description Filtered food items based on the currently selected category
+   * Memoized to prevent recalculation on each render
    */
-  const filteredItems = foodItems.filter(
-    item => item.categoryId === selectedCategory,
+  const filteredItems = useMemo(
+    () => foodItems.filter(item => item.categoryId === selectedCategory),
+    [selectedCategory]
   );
   /**
    * Handles adding a food item to the cart

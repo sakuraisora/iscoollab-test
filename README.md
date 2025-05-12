@@ -39,13 +39,13 @@ cd iscoollab-test
 npm install
 ```
 
-3. Start the development server:
+3. Start the development server(React):
 
 ```bash
-npm run dev
+npm run dev:react
 ```
 
-This will start both the React development server and Electron app.
+3.1 Building electron must do first in order to run dev.
 
 ## Building for Production
 
